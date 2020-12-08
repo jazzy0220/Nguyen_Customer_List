@@ -496,7 +496,7 @@ app.post("/export", (req, res) => {
     } else {
       var output = "";
       result.rows.forEach((product) => {
-        output += `${product.cusid},${product.cusfname},${product.cuslname},${product.cusstate},${product.cussalesytd},${product.cussalesprev}\r\n`;
+	output += `${product.cusid},${product.cusfname},${product.cuslname},${product.cusstate},${convertCurrencytoString(product.cussalesytd)},${convertCurrencytoString(product.cussalesprev)}\r\n`;
       });
       res.header("Content-Type", "text/csv");
       res.attachment("export.csv");
