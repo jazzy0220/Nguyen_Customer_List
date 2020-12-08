@@ -104,7 +104,7 @@ app.get("/customers", (req, res) => {
       model: result.rows,
       display: false,
       data: data,
-      found: 0,
+      found: 1,
     });
   });
 });
@@ -144,44 +144,92 @@ app.post("/customers", (req, res) => {
       if (err) {
         return console.error(err.message);
       }
-      for (var i = 0; i < data.length; i++) {
-        if (data[i] != "") {
-          var temp;
-          var arr = [];
-          if (i == 0) temp = "cusid";
-          else if (i == 1) temp = "cusfname";
-          else if (i == 2) temp = "cuslname";
-          else if (i == 3) temp = "cusstate";
-          else if (i == 4) temp = "cussalesytd";
-          else if (i == 5) temp = "cussalesprev";
-          for (var j = 0; j < result.rows.length; j++) {
-            var stringtest = result.rows[j][temp];
-            // Search are not case sensitive
-            if (stringtest.toString().toLowerCase() === data[i].toLowerCase()) {
-              arr.push(result.rows[j]);
-              break;
-            }
-          }
-          if (arr.length == 0) {
-            res.render("customers", {
-              model: result.rows,
-              dataFound: arr,
-              display: false,
-              data: data,
-              found: 1,
-            });
-          } else {
-            res.render("customers", {
-              model: result.rows,
-              dataFound: arr,
-              display: true,
-              data: data,
-              found: 0,
-            });
-          }
-          break;
+      var dataFound = [],
+        display,
+        found;
+      for (var i = 0; i < result.rows.length; i++) {
+        var cus = result.rows[i];
+        var checkid = true,
+          checkfirst = true,
+          checklast = true,
+          checkstate = true,
+          checksales = true,
+          checkprevious = true;
+        if (id !== "") {
+          if (parseInt(id) === cus.cusid) checkid = true;
+          else checkid = false;
+        }
+        /*cusFname, cusLname, cusState, cusSalesYTD, cusSalesPrev*/
+        if (firstname !== "") {
+          var len = firstname.length;
+          if (
+            len <= cus.cusfname.length &&
+            firstname.toLowerCase() ===
+              cus.cusfname.substring(0, len).toLowerCase()
+          )
+            checkfirst = true;
+          else checkfirst = false;
+        }
+
+        if (lastname !== "") {
+          len = lastname.length;
+          if (
+            len <= cus.cuslname.length &&
+            lastname.toLowerCase() ===
+              cus.cuslname.substring(0, len).toLowerCase()
+          )
+            checklast = true;
+          else checklast = false;
+        }
+
+        if (state !== "") {
+          len = state.length;
+          if (
+            len <= cus.cusstate.length &&
+            state.toLowerCase() === cus.cusstate.substring(0, len).toLowerCase()
+          )
+            checkstate = true;
+          else checkstate = false;
+        }
+
+        if (salesytd !== "") {
+          if (parseInt(salesytd) <= convertCurrencytoString(cus.cussalesytd))
+            checksales = true;
+          else checksales = false;
+        }
+        if (previousyear !== "") {
+          if (
+            parseInt(previousyear) <= convertCurrencytoString(cus.cussalesprev)
+          )
+            checkprevious = true;
+          else checkprevious = false;
+        }
+
+        if (
+          checkid &&
+          checkfirst &&
+          checklast &&
+          checkstate &&
+          checksales &&
+          checkprevious
+        ) {
+          dataFound.push(cus);
         }
       }
+      if (dataFound.length === 0) {
+        display = false;
+        found = 0;
+      } else {
+        display = true;
+        found = 1;
+      }
+      res.render("customers", {
+        model: result.rows,
+        dataFound: dataFound,
+        display: display,
+        data: data,
+        found: found,
+      });
     });
   }
 });
